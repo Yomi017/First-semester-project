@@ -1,0 +1,3 @@
+/home/yomi/Cmake/bigproject/CMakeFiles/project.dir
+/home/yomi/Cmake/bigproject/CMakeFiles/edit_cache.dir
+/home/yomi/Cmake/bigproject/CMakeFiles/rebuild_cache.dir
