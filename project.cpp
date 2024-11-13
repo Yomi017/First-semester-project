@@ -111,99 +111,62 @@ void asterisk_select(vector<TokenWithValue>::const_iterator& it, vector<TokenWit
 }
 
 // 选择条件的数据
-bool is_number_where(const string& s) {
+bool is_number_where(const std::string& s) {
     try {
-        stof(s);  // 如果能够转换为浮动类型，说明是数字
+        std::stod(s);  // 尝试将字符串转换为数字
         return true;
     } catch (const std::invalid_argument&) {
-        return false;  // 无效的数字格式
+        return false;  // 如果不能转换为数字，返回 false
     } catch (const std::out_of_range&) {
-        return false;  // 超出范围
+        return false;  // 如果超出范围，返回 false
     }
 }
-void where_select(const string& column_name, vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end, Table& table) {
-    string symbol;
-    string value;
 
-    // 确保我们在 token 列表的正确位置
+void where_select(vector<string>& column_Name, vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end, Table& table) {
     if (it != end && it->token == Token::IDENTIFIER) {
-        string column_name = it->value;  // 获取要筛选的列名
+        string column_name = it->value;
         ++it;
 
-        // 检查操作符：=，<，或>
-        if (it != end && (it->token == Token::EQUAL || it->token == Token::LT || it->token == Token::GT)) {
-            if (it->token == Token::EQUAL) {
-                symbol = "=";
-            } else if (it->token == Token::LT) {
-                symbol = "<";
-            } else if (it->token == Token::GT) {
-                symbol = ">";
-            }
+        // 检查操作符
+        if (it != end && it->token == Token::EQUAL) {
             ++it;
-
-            // 获取待比较的值
             if (it != end && (it->token == Token::STRING || it->token == Token::NUMBER)) {
-                value = it->value;
-            }
-        }
-    }
+                string value = it->value;
+                ++it;
 
-    // 现在我们有了列名、操作符和要比较的值，过滤行
-    for (const auto& row : table.data) {
-        int col_index = -1;
+                for (size_t i = 0; i < table.columns.size(); ++i) {
+                    if (column_name == table.columns[i].name) {  // 找到目标列
+                        for (const auto& row : table.data) {
+                            bool match = false;
 
-        // 找到表中对应列的索引
-        for (int i = 0; i < table.columns.size(); ++i) {
-            if (table.columns[i].name == column_name) {
-                col_index = i;
-                break;
-            }
-        }
+                            // 进行比较，考虑数字与字符串的情况
+                            if (is_number(value)) {
+                                // 如果 value 是数字
+                                double compare_val = stod(value);
+                                double row_val = stod(row[i]);  // 将行中的数据转为数字进行比较
+                                match = (row_val == compare_val);
+                            } else {
+                                // 如果 value 是字符串
+                                match = (row[i] == value);
+                            }
 
-        if (col_index != -1) {  // 如果该列存在
-            string row_value = row[col_index];
-            bool match = false;
-
-            // 数字比较：如果 row_value 和 value 都是数字
-            if (is_number_where(row_value) && is_number_where(value)) {  
-                // 将 row_value 和 value 转换为 float 进行比较
-                float row_val = stof(row_value);
-                float compare_val = stof(value);
-
-                if (symbol == "=") {
-                    match = (row_val == compare_val);
-                } else if (symbol == "<") {
-                    match = (row_val < compare_val);
-                } else if (symbol == ">") {
-                    match = (row_val > compare_val);
-                }
-            } 
-            // 字符串比较：如果 value 不是数字，直接按字符串比较
-            else {
-                if (symbol == "=") {
-                    match = (row_value == value);
-                } else if (symbol == "<") {
-                    match = (row_value < value);
-                } else if (symbol == ">") {
-                    match = (row_value > value);
-                }
-            }
-
-            // 如果符合条件，输出该行
-            if (match) {
-                for (const auto& column : table.columns) {
-                    int col_index = -1;
-                    for (int i = 0; i < table.columns.size(); ++i) {
-                        if (table.columns[i].name == column.name) {
-                            col_index = i;
-                            break;
+                            // 如果匹配，输出对应的列
+                            if (match) {
+                                for (size_t j = 0; j < column_Name.size(); ++j) {
+                                    for (size_t k = 0; k < table.columns.size(); ++k) {
+                                        if (column_Name[j] == table.columns[k].name) {
+                                            cout << row[k];
+                                            if (j < column_Name.size() - 1) {
+                                                cout << ",";
+                                            }
+                                        }
+                                    }
+                                }
+                                cout << endl;
+                            }
                         }
                     }
-                    if (col_index != -1) {
-                        cout << row[col_index] << " ";
-                    }
                 }
-                cout << endl;
             }
         }
     }
@@ -231,7 +194,7 @@ void identifier_select(const string& column_name, vector<TokenWithValue>::const_
             ++it;
             if (it != end && it->token == Token::WHERE) {
                 Table& table = current_database->tables[table_name];
-                where_select(column_name, it, end, table);
+                where_select(column_Name,it, end, table);
             }else {
             Table& table = current_database->tables[table_name];
             for (const auto& row : table.data) {
@@ -372,19 +335,33 @@ int main() {
     //     }
     //     cout << endl;
     // }
+
     for (const auto& line_tokens : lex_output) {
         execute_query(line_tokens);
+    }
+    for (const auto& table : current_database->tables) {
+        cout << "Table " << table.first << ":\n";
+        for (const auto& column : table.second.columns) {
+            cout << column.name << "," ;
+        }
+        cout << endl;
+        for (const auto& row : table.second.data) {
+            for (const auto& value : row) {
+                cout << value << ",";
+            }
+            cout << endl;
+        }
     }
     // for (const auto& db : databases) {
     //     cout << "Database " << db.first << ":\n";
     //     for (const auto& table : db.second.tables) {
     //         cout << "Table " << table.first << ":\n";
     //         for (const auto& column : table.second.columns) {
-    //             cout << column.name << " " << column.type << endl;
+    //             cout << column.name << "," ;
     //         }
     //         for (const auto& row : table.second.data) {
     //             for (const auto& value : row) {
-    //                 cout << value << " ";
+    //                 cout << value << ",";
     //             }
     //             cout << endl;
     //         }
