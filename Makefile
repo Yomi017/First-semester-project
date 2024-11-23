@@ -153,6 +153,126 @@ lex.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/project.dir/build.make CMakeFiles/project.dir/lex.cpp.s
 .PHONY : lex.cpp.s
 
+order/create.o: order/create.cpp.o
+.PHONY : order/create.o
+
+# target to build an object file
+order/create.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/project.dir/build.make CMakeFiles/project.dir/order/create.cpp.o
+.PHONY : order/create.cpp.o
+
+order/create.i: order/create.cpp.i
+.PHONY : order/create.i
+
+# target to preprocess a source file
+order/create.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/project.dir/build.make CMakeFiles/project.dir/order/create.cpp.i
+.PHONY : order/create.cpp.i
+
+order/create.s: order/create.cpp.s
+.PHONY : order/create.s
+
+# target to generate assembly for a file
+order/create.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/project.dir/build.make CMakeFiles/project.dir/order/create.cpp.s
+.PHONY : order/create.cpp.s
+
+order/delete.o: order/delete.cpp.o
+.PHONY : order/delete.o
+
+# target to build an object file
+order/delete.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/project.dir/build.make CMakeFiles/project.dir/order/delete.cpp.o
+.PHONY : order/delete.cpp.o
+
+order/delete.i: order/delete.cpp.i
+.PHONY : order/delete.i
+
+# target to preprocess a source file
+order/delete.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/project.dir/build.make CMakeFiles/project.dir/order/delete.cpp.i
+.PHONY : order/delete.cpp.i
+
+order/delete.s: order/delete.cpp.s
+.PHONY : order/delete.s
+
+# target to generate assembly for a file
+order/delete.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/project.dir/build.make CMakeFiles/project.dir/order/delete.cpp.s
+.PHONY : order/delete.cpp.s
+
+order/order.o: order/order.cpp.o
+.PHONY : order/order.o
+
+# target to build an object file
+order/order.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/project.dir/build.make CMakeFiles/project.dir/order/order.cpp.o
+.PHONY : order/order.cpp.o
+
+order/order.i: order/order.cpp.i
+.PHONY : order/order.i
+
+# target to preprocess a source file
+order/order.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/project.dir/build.make CMakeFiles/project.dir/order/order.cpp.i
+.PHONY : order/order.cpp.i
+
+order/order.s: order/order.cpp.s
+.PHONY : order/order.s
+
+# target to generate assembly for a file
+order/order.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/project.dir/build.make CMakeFiles/project.dir/order/order.cpp.s
+.PHONY : order/order.cpp.s
+
+order/select.o: order/select.cpp.o
+.PHONY : order/select.o
+
+# target to build an object file
+order/select.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/project.dir/build.make CMakeFiles/project.dir/order/select.cpp.o
+.PHONY : order/select.cpp.o
+
+order/select.i: order/select.cpp.i
+.PHONY : order/select.i
+
+# target to preprocess a source file
+order/select.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/project.dir/build.make CMakeFiles/project.dir/order/select.cpp.i
+.PHONY : order/select.cpp.i
+
+order/select.s: order/select.cpp.s
+.PHONY : order/select.s
+
+# target to generate assembly for a file
+order/select.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/project.dir/build.make CMakeFiles/project.dir/order/select.cpp.s
+.PHONY : order/select.cpp.s
+
+order/update.o: order/update.cpp.o
+.PHONY : order/update.o
+
+# target to build an object file
+order/update.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/project.dir/build.make CMakeFiles/project.dir/order/update.cpp.o
+.PHONY : order/update.cpp.o
+
+order/update.i: order/update.cpp.i
+.PHONY : order/update.i
+
+# target to preprocess a source file
+order/update.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/project.dir/build.make CMakeFiles/project.dir/order/update.cpp.i
+.PHONY : order/update.cpp.i
+
+order/update.s: order/update.cpp.s
+.PHONY : order/update.s
+
+# target to generate assembly for a file
+order/update.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/project.dir/build.make CMakeFiles/project.dir/order/update.cpp.s
+.PHONY : order/update.cpp.s
+
 project.o: project.cpp.o
 .PHONY : project.o
 
@@ -189,6 +309,21 @@ help:
 	@echo "... lex.o"
 	@echo "... lex.i"
 	@echo "... lex.s"
+	@echo "... order/create.o"
+	@echo "... order/create.i"
+	@echo "... order/create.s"
+	@echo "... order/delete.o"
+	@echo "... order/delete.i"
+	@echo "... order/delete.s"
+	@echo "... order/order.o"
+	@echo "... order/order.i"
+	@echo "... order/order.s"
+	@echo "... order/select.o"
+	@echo "... order/select.i"
+	@echo "... order/select.s"
+	@echo "... order/update.o"
+	@echo "... order/update.i"
+	@echo "... order/update.s"
 	@echo "... project.o"
 	@echo "... project.i"
 	@echo "... project.s"

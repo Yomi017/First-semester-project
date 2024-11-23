@@ -1,87 +1,7 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <vector>
-#include <unordered_map>
-#include <cctype>
-#include <algorithm>
+#include <bits/stdc++.h>
 #include "project.h"
 using namespace std;
-unordered_map<string, Token> token_map = {
-    {"=", Token::EQUAL},
-    {">", Token::GT},
-    {"<", Token::LT},
-    {"*", Token::ASTERISK},
-    {"(", Token::LPAREN},
-    {")", Token::RPAREN},
-    {";", Token::SEMICOLON},
-    {",", Token::COMMA},
-    {".", Token::POINT},
-    {"CREATE", Token::CREATE},
-    {"USE", Token::USE},
-    {"INSERT", Token::INSERT},
-    {"DROP", Token::DROP},
-    {"SELECT", Token::SELECT},
-    {"INNER_JOIN", Token::INNER_JOIN},
-    {"UPDATE", Token::UPDATE},
-    {"SET", Token::SET},
-    {"DELETE", Token::DELETE},
-    {"DATABASE", Token::DATABASE},
-    {"TABLE", Token::TABLE},
-    {"INTO", Token::INTO},
-    {"ON", Token::ON},
-    {"FROM", Token::FROM},
-    {"WHERE", Token::WHERE},
-    {"VALUES", Token::VALUES}  // 新增 VALUES 关键字
-};
-
-string token_to_string(Token token) {
-    switch (token) {
-        case Token::EQUAL: return "Token::EQUAL";
-        case Token::GT: return "Token::GT";
-        case Token::LT: return "Token::LT";
-        case Token::LPAREN: return "Token::LPAREN";
-        case Token::RPAREN: return "Token::RPAREN";
-        case Token::COMMA: return "Token::COMMA";
-        case Token::POINT: return "Token::POINT";
-        case Token::SEMICOLON: return "Token::SEMICOLON";
-        case Token::ASTERISK: return "Token::ASTERISK";
-        case Token::CREATE: return "Token::CREATE";
-        case Token::USE: return "Token::USE";
-        case Token::INSERT: return "Token::INSERT";
-        case Token::DROP: return "Token::DROP";
-        case Token::SELECT: return "Token::SELECT";
-        case Token::INNER_JOIN: return "Token::INNER_JOIN";
-        case Token::UPDATE: return "Token::UPDATE";
-        case Token::SET: return "Token::SET";
-        case Token::DELETE: return "Token::DELETE";
-        case Token::DATABASE: return "Token::DATABASE";
-        case Token::TABLE: return "Token::TABLE";
-        case Token::INTO: return "Token::INTO";
-        case Token::ON: return "Token::ON";
-        case Token::FROM: return "Token::FROM";
-        case Token::WHERE: return "Token::WHERE";
-        case Token::VALUES: return "Token::VALUES";
-        case Token::IDENTIFIER: return "Token::IDENTIFIER";
-        case Token::NUMBER: return "Token::NUMBER";
-        case Token::STRING: return "Token::STRING";
-        default: return "Unknown Token";
-    }
-}
-
-// 判断字符串是否是数字
-bool is_number(const string& s) {
-    return !s.empty() && all_of(s.begin(), s.end(), ::isdigit);
-}
-
-// 判断字符串是否是有效的字符串常量
-bool is_string_literal(const string& s) {
-    return !s.empty() && s.front() == '\'' && s.back() == '\'';  // 判断是否是单引号括起来的字符串
-}
-
-// 词法分析函数
-vector<TokenWithValue> lex(const string& input,bool& inside_paren) {
+vector<TokenWithValue> lex(const string& input) {
     vector<TokenWithValue> result;
     const char* ip = input.c_str();  // ip 是指向字符串的字符指针
     string token;
@@ -117,17 +37,17 @@ vector<TokenWithValue> lex(const string& input,bool& inside_paren) {
         }
         // 处理括号符号
         else if (*ip == '(') {
-            if (!inside_paren) {
-                inside_paren = true;  // 标记进入括号
+            // if (!inside_paren) {
+                // inside_paren = true;  // 标记进入括号
                 result.push_back(TokenWithValue(Token::LPAREN, "("));
-            }
+            // }
             ++ip;
         }
         else if (*ip == ')') {
-            if (inside_paren) {
+            // if (inside_paren) {
                 result.push_back(TokenWithValue(Token::RPAREN, ")"));
-                inside_paren = false;  // 标记离开括号
-            }
+                // inside_paren = false;  // 标记离开括号
+            // }
             ++ip;
         }
         // 处理逗号
@@ -184,27 +104,34 @@ vector<TokenWithValue> lex(const string& input,bool& inside_paren) {
     return result;
 }
 
-
 vector<vector<TokenWithValue>> lexfile(const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
         cerr << "ERROR! Cannot open file " << filename << endl;
         return {};
     }
-    bool inside_paren = false;  // 标记是否在括号内
+
     vector<vector<TokenWithValue>> all_tokens;  // 二维容器，存储每一行的解析结果
+    vector<TokenWithValue> current_line_tokens;  // 当前行的 token 容器
     string line;
 
     // 逐行读取文件
     while (getline(file, line)) {
-        // 调用 Lex 函数解析每一行
-        vector<TokenWithValue> tokens = lex(line,inside_paren);
-        if ((inside_paren && line.find('(') == string::npos) || (!inside_paren && line.find(')') != string::npos && line.find('(') == string::npos)) {
-            all_tokens.back().insert(all_tokens.back().end(), tokens.begin(), tokens.end());
-        } else {
-            all_tokens.push_back(tokens);
+        vector<TokenWithValue> tokens = lex(line);  // 调用 lex 函数解析每一行
+        for (const auto& token : tokens) {
+            current_line_tokens.push_back(token);  // 将当前 token 加入行容器
+            if (token.token == Token::SEMICOLON) {  // 检测到分号
+                all_tokens.push_back(current_line_tokens);  // 保存当前行
+                current_line_tokens.clear();  // 开始新的行
+            }
         }
     }
+
+    // 如果最后还有未保存的 token，将其加入到 all_tokens 中
+    if (!current_line_tokens.empty()) {
+        all_tokens.push_back(current_line_tokens);
+    }
+
     file.close();
     return all_tokens;
 }
