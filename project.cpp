@@ -133,8 +133,7 @@ int main() {
     }
 
     string input, output;
-    input = "input.sql";
-    output = "output.csv";
+    cin >> input >> output;
     vector<vector<TokenWithValue>> lex_output = lexfile(input);
     initialize_output_file(output);
 
