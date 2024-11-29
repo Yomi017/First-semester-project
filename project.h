@@ -17,9 +17,9 @@ enum class Token {
     LPAREN,         // (
     RPAREN,         // )
     SEMICOLON,      // ;
-    CREATE,
-    USE,
-    INSERT,
+    CREATE,         // CREATE
+    USE,            // USE
+    INSERT,         // INSERT
     DROP,
     SELECT,
     INNER,
@@ -38,15 +38,16 @@ enum class Token {
     IDENTIFIER,     // 标识符
     COMMA,          // ,
     NUMBER,         // 数字（整数或浮点数）
-    STRING,          // 字符串常量
-    GT,
-    LT,
-    AND,
-    OR,
-    PLUS, // 加法
-    MINUS, // 减法 
-    DIVIDE, // 除法
-    MULTIPLY, // 乘法
+    STRING,         // 字符串常量
+    GT,             // >
+    LT,             // <
+    AND,            // AND
+    OR,             // OR
+    PLUS,           // +
+    MINUS,          // -
+    DIVIDE,         // ÷
+    MULTIPLY,       // ×
+    NOT,            // !
 };
 
 // 列的定义

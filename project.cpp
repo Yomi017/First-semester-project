@@ -54,9 +54,11 @@ unordered_map<string, Token> token_map = {
     {"+", Token::PLUS},
     {"-", Token::MINUS},
     {"/", Token::DIVIDE},
-    {"*", Token::MULTIPLY}
+    {"*", Token::MULTIPLY},
+    {"!", Token::NOT},
 };
 
+// 输出Token用于调试
 string token_to_string(Token token) {
     switch (token) {
         case Token::EQUAL: return "Token::EQUAL";
@@ -133,7 +135,9 @@ int main() {
     }
 
     string input, output;
-    cin >> input >> output;
+    // cin >> input >> output;
+    input = "input.sql";
+    output = "output.csv";
     vector<vector<TokenWithValue>> lex_output = lexfile(input);
     initialize_output_file(output);
 

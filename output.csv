@@ -1,11 +1,6 @@
 ID
 3
+4
 ---
-CourseID, Semester
-101, Fall 2023
-102, Fall 2023
-103, Fall 2023
----
-StudentID,CourseID,Semester
-2,204,Spring 2024
-3,414,Spring 2023
+ID,Name,GPA
+2,Ali,1

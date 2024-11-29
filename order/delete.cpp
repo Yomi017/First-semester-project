@@ -22,8 +22,18 @@ void where_delete(vector<TokenWithValue>::const_iterator& it, vector<TokenWithVa
         string column_name = it->value;
         ++it;
         // 检查操作符
-        if (it != end && (it->token == Token::EQUAL || it->token == Token::GT || it->token == Token::LT)) {
-            string op = it->value;
+        if (it != end && (it->token == Token::EQUAL || it->token == Token::GT || it->token == Token::LT || it->token == Token::NOT)) {
+            string tp = it->value;
+            if (it != end && it->token == Token::NOT) {
+                ++it;
+                if (it != end && it->token == Token::EQUAL) {
+                    tp = "!=";
+                } else {
+                    cerr << "ERROR! Expected = after !." << "At column " << colnum << endl;
+                    return;
+                }
+            }
+            string op = tp;
             ++it;
             if (it != end && (it->token == Token::STRING || it->token == Token::NUMBER)) {
                 string value = it->value;
@@ -61,6 +71,14 @@ void where_delete(vector<TokenWithValue>::const_iterator& it, vector<TokenWithVa
                             if (is_number_where(value)) {
                                 if (is_number_where(target_row[index])) {
                                     if (target_row[index] < value) {
+                                        match[distance(table.data.begin(), find(table.data.begin(), table.data.end(), target_row))] = true;
+                                    }
+                                }
+                            }
+                        } else if (op == "!=") {
+                            if (is_number_where(value)) {
+                                if (is_number_where(target_row[index])) {
+                                    if (target_row[index] != value) {
                                         match[distance(table.data.begin(), find(table.data.begin(), table.data.end(), target_row))] = true;
                                     }
                                 }
