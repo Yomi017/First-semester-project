@@ -1,6 +1,9 @@
 #include <bits/stdc++.h>
 #include "../project.h"
 using namespace std;
+
+// 删除数据
+// 2. 删除所有数据
 void asterisk_delete(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end){
         string table_name = it->value;
         if (current_database == nullptr) {
@@ -16,6 +19,7 @@ void asterisk_delete(vector<TokenWithValue>::const_iterator& it, vector<TokenWit
         // cout << "All data from table " << table_name << " deleted.\n";
 }
 
+// 3. 删除特定的数据的where子函数
 void where_delete(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end, Table& table, Table& table1) {
         ++it;
     if (it != end && it->token == Token::IDENTIFIER) {
@@ -105,6 +109,7 @@ void where_delete(vector<TokenWithValue>::const_iterator& it, vector<TokenWithVa
     }
 }
 
+// 2. 删除特定的数据
 void identifier_delete(const string& table_name, vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end){
     ++it;
     if (it != end && it->token == Token::WHERE){
@@ -121,6 +126,7 @@ void identifier_delete(const string& table_name, vector<TokenWithValue>::const_i
         }
 }
 
+// 1. 删除数据主函数
 void delete_data(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end){
         if (it != end && it->token == Token::FROM) {
             ++it;

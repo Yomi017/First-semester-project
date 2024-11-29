@@ -1,11 +1,13 @@
 #include <bits/stdc++.h>
 #include "project.h"
 using namespace std;
+
+// 词法分析
+// 词法分析器将输入的字符串分解为 token，每个 token 包含 token 类型和对应的值
 vector<TokenWithValue> lex(const string& input) {
     vector<TokenWithValue> result;
     const char* ip = input.c_str();  // ip 是指向字符串的字符指针
     string token;
-      // 记录是否在括号内
 
     while (*ip != '\0') {  // 当 ip 指向的字符不是字符串结尾时
         if (isspace(*ip)) {  // 跳过空白字符
@@ -104,6 +106,7 @@ vector<TokenWithValue> lex(const string& input) {
     return result;
 }
 
+// 词法分析文件
 vector<vector<TokenWithValue>> lexfile(const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {

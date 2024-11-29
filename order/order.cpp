@@ -92,16 +92,16 @@ void execute_query(const vector<TokenWithValue>& tokens) {
             }
         }
     } 
-    else if (it != tokens.end() && it->token == Token::SELECT) { 
+    else if (it != tokens.end() && it->token == Token::SELECT) { // 查询数据
         ++it;
         select_data(it, tokens.end());
-    } else if (it != tokens.end() && it->token == Token::UPDATE) {
+    } else if (it != tokens.end() && it->token == Token::UPDATE) { // 更新数据
         ++it;
         update_data(it, tokens.end());
-    } else if (it != tokens.end() && it->token == Token::DELETE) {
+    } else if (it != tokens.end() && it->token == Token::DELETE) { // 删除数据
         ++it;
         delete_data(it, tokens.end());
-    } else {
+    } else { // 未知命令
         cerr << "ERROR! Unknown command." << "At column " << colnum << endl;
     }
 }

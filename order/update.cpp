@@ -1,6 +1,9 @@
 #include <bits/stdc++.h>
 #include "../project.h"
 using namespace std;
+
+// 更新数据
+// 计算器（支持加减乘除和括号，含有一个变量）
 double evaluate(const string& expression, const map<string, double>& variables) {
     stack<double> values;
     stack<char> operators;
@@ -78,6 +81,7 @@ double evaluate(const string& expression, const map<string, double>& variables) 
     return values.top(); // 返回最终的结果
 }
 
+// 获取小数点后的位数
 int getDecimalPlaces(const string& s) {
     size_t pos = s.find('.');
     if (pos == string::npos) {
@@ -86,6 +90,7 @@ int getDecimalPlaces(const string& s) {
     return s.size() - pos - 1;
 }
 
+// 更新数据辅助执行函数
 void update_helper(Table& table, const string& column_name, const string& expression, const string& condition_column, const string& op, const string& value, int digit_or_identifier) {
     vector<bool> match(table.data.size(), false);
     if (digit_or_identifier == 1) {
@@ -188,6 +193,7 @@ void update_helper(Table& table, const string& column_name, const string& expres
     }
 }
 
+// 更新数据主函数
 void update_data(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end) {
     vector<string> expression_list;
     vector<string> column_name_list;

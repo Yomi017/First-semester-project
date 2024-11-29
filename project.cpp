@@ -1,14 +1,16 @@
 #include <bits/stdc++.h>
 #include "project.h"
 using namespace std;
-int colnum = 0;
-int select_num = 0;
-Database* current_database = nullptr;
-ofstream out;
+int colnum = 0;// 记录当前列数
+int select_num = 0; // 记录当前select的次数, 用于输出时判断是否需要输出"---"
+Database* current_database = nullptr;// 当前数据库指针, 指向选中的数据库
+ofstream out;// 输出文件流
 
-vector<string> column_Name;
-string symbol;
-unordered_map<string, Database> databases;
+vector<string> column_Name;// 用于存储select语句中的列名
+string symbol;// 用于存储where语句中的符号
+unordered_map<string, Database> databases;// 所有数据库集合
+
+// 清空表数据，以便重新插入数据
 void initialize_output_file(string filename) {
     out.open(filename, ios::out | ios::trunc); // 以截断模式打开，清空文件
     if (!out.is_open()) {
@@ -16,12 +18,14 @@ void initialize_output_file(string filename) {
     }
 }
 
+// 关闭输出文件
 void close_output_file() {
     if (out.is_open()) {
         out.close();
     }
 }
 
+// token 映射表, 关键字到 Token 的映射
 unordered_map<string, Token> token_map = {
     {"=", Token::EQUAL},
     {">", Token::GT},
@@ -105,18 +109,19 @@ bool is_number(const string& s) {
     return !s.empty() && all_of(s.begin(), s.end(), ::isdigit);
 }
 
-// 判断字符串是否是有效的字符串常量
+// 判断字符串是否是有效的字符串常量，即单引号括起来的字符串
 bool is_string_literal(const string& s) {
     return !s.empty() && s.front() == '\'' && s.back() == '\'';  // 判断是否是单引号括起来的字符串
 }
 
+// 判断字符串是否是数字，并尝试转换，在 where 子句中使用
 bool is_number_where(const std::string& s) {
     try {
-        std::stod(s);  // 尝试将字符串转换为数字
+        stod(s);  // 尝试将字符串转换为数字
         return true;
-    } catch (const std::invalid_argument&) {
+    } catch (const invalid_argument&) {
         return false;  // 如果不能转换为数字，返回 false
-    } catch (const std::out_of_range&) {
+    } catch (const out_of_range&) {
         return false;  // 如果超出范围，返回 false
     }
 }
@@ -124,15 +129,17 @@ bool is_number_where(const std::string& s) {
 int main() {
     // 读取 store.sql 文件，恢复数据库状态
     vector<vector<TokenWithValue>> lex_store = lexfile("store.sql");
+
     // for (const auto& line_tokens : lex_store) {
     //     for (const auto& token : line_tokens) {
     //         cout << token_to_string(token.token) << " ";
     //     }
     //     cout << endl;
     // }  // 输出词法分析结果
+
     for (const auto& line_tokens : lex_store) {
         execute_query(line_tokens);
-    }
+    }  // 执行 SQL 命令
 
     string input, output;
     // cin >> input >> output;
