@@ -140,7 +140,6 @@ int main() {
     for (const auto& line_tokens : lex_store) {
         execute_query(line_tokens);
     }  // 执行 SQL 命令
-
     string input, output;
     // cin >> input >> output;
     input = "input.sql";
@@ -149,10 +148,17 @@ int main() {
     initialize_output_file(output);
 
     for (const auto& line_tokens : lex_output) {
+        for (const auto& token : line_tokens) {
+            cout << token_to_string(token.token) << " ";
+        }
+        cout << endl;
+    }  // 输出词法分析结果
+
+    for (const auto& line_tokens : lex_output) {
         ++colnum;
         execute_query(line_tokens);
     } // 执行 SQL 命令
-
+    out << "---" << endl;  // 输出结束标志
     close_output_file();
 
     // 将数据库状态写入 store.txt

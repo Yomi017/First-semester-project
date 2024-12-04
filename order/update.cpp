@@ -3,7 +3,6 @@
 using namespace std;
 
 // 更新数据
-// 计算器（支持加减乘除和括号，含有一个变量）
 double evaluate(const string& expression, const map<string, double>& variables) {
     stack<double> values;
     stack<char> operators;
@@ -81,7 +80,6 @@ double evaluate(const string& expression, const map<string, double>& variables) 
     return values.top(); // 返回最终的结果
 }
 
-// 获取小数点后的位数
 int getDecimalPlaces(const string& s) {
     size_t pos = s.find('.');
     if (pos == string::npos) {
@@ -90,15 +88,15 @@ int getDecimalPlaces(const string& s) {
     return s.size() - pos - 1;
 }
 
-// 更新数据辅助执行函数
 void update_helper(Table& table, const string& column_name, const string& expression, const string& condition_column, const string& op, const string& value, int digit_or_identifier) {
     vector<bool> match(table.data.size(), false);
+    // out <<digit_or_identifier;
     if (digit_or_identifier == 1) {
         auto its = find_if(table.columns.begin(), table.columns.end(), [&](const Column& col) {
             return col.name == condition_column;
         });
         if (its == table.columns.end()) {
-            throw std::runtime_error("Condition column not found.");
+            throw runtime_error("Condition column not found.");
         }
         size_t condition_index = distance(table.columns.begin(), its);
 
@@ -109,11 +107,11 @@ void update_helper(Table& table, const string& column_name, const string& expres
             if (op == "=" && target_value == value) {
                 match[i] = true;
             } else if (op == ">" && is_number_where(value) && is_number_where(target_value)) {
-                if (std::stod(target_value) - std::stod(value) > 1e-9) {
+                if (stod(target_value) - stod(value) > 1e-9) {
                     match[i] = true;
                 }
             } else if (op == "<" && is_number_where(value) && is_number_where(target_value)) {
-                if (std::stod(target_value) - std::stod(value) < 1e-9) {
+                if (stod(target_value) - stod(value) < 1e-9) {
                     match[i] = true;
                 }
             }
@@ -135,7 +133,7 @@ void update_helper(Table& table, const string& column_name, const string& expres
             return col.name == condition_column;
         });
         if (its == table.columns.end()) {
-            throw std::runtime_error("Condition column not found.");
+            throw runtime_error("Condition column not found.");
         }
         size_t condition_index = distance(table.columns.begin(), its);
 
@@ -146,11 +144,11 @@ void update_helper(Table& table, const string& column_name, const string& expres
             if (op == "=" && target_value == value) {
                 match[i] = true;
             } else if (op == ">" && is_number_where(value) && is_number_where(target_value)) {
-                if (std::stod(target_value) > std::stod(value)) {
+                if (stod(target_value) > stod(value)) {
                     match[i] = true;
                 }
             } else if (op == "<" && is_number_where(value) && is_number_where(target_value)) {
-                if (std::stod(target_value) < std::stod(value)) {
+                if (stod(target_value) < stod(value)) {
                     match[i] = true;
                 }
             }
@@ -175,15 +173,15 @@ void update_helper(Table& table, const string& column_name, const string& expres
 
                     // 构造变量表
                     map<string, double> variables;
-                    variables["x"] = std::stod(table.data[i][index]);
+                    variables["x"] = stod(table.data[i][index]);
 
                     // 计算结果并格式化
                     try {
-                        std::ostringstream oss;
-                        oss << std::fixed << std::setprecision(decimal_places) << evaluate(replaced_expression, variables);
+                        ostringstream oss;
+                        oss << fixed << setprecision(decimal_places) << evaluate(replaced_expression, variables);
                         table.data[i][index] = oss.str();
-                    } catch (const std::runtime_error& e) {
-                        std::cerr << "Error evaluating expression: " << e.what() << std::endl;
+                    } catch (const runtime_error& e) {
+                        cerr << "Error evaluating expression: " << e.what() << endl;
                     }
                 }
             }
@@ -193,7 +191,55 @@ void update_helper(Table& table, const string& column_name, const string& expres
     }
 }
 
-// 更新数据主函数
+void update_helper2(Table& table, const string& column_name, const string& expression, int digit_or_identifier){
+    // cout << "in update_helper2" << endl;
+    if (digit_or_identifier == 1) {
+        for (size_t i = 0; i < table.data.size(); ++i) {
+            auto col_it = find_if(table.columns.begin(), table.columns.end(), [&](const Column& col) {
+                return col.name == column_name;
+            });
+            if (col_it != table.columns.end()) {
+                size_t index = distance(table.columns.begin(), col_it);
+                table.data[i][index] = expression;
+                // cout << "Updated"<< endl;
+            }
+        }
+    } else if (digit_or_identifier > 1) {
+        // 替换表达式中的列名为 'x'
+        string replaced_expression = expression;
+        size_t pos = 0;
+        while ((pos = replaced_expression.find(column_name, pos)) != string::npos) {
+            replaced_expression.replace(pos, column_name.length(), "x");
+            pos += column_name.length();  // 移动到下一个位置
+        }
+
+        for (size_t i = 0; i < table.data.size(); ++i) {
+            auto col_it = find_if(table.columns.begin(), table.columns.end(), [&](const Column& col) {
+                return col.name == column_name;
+            });
+            if (col_it != table.columns.end()) {
+                size_t index = distance(table.columns.begin(), col_it);
+                int decimal_places = getDecimalPlaces(table.data[i][index]);
+
+                // 构造变量表
+                map<string, double> variables;
+                variables["x"] = stod(table.data[i][index]);
+
+                // 计算结果并格式化
+                try {
+                    ostringstream oss;
+                    oss << fixed << setprecision(decimal_places) << evaluate(replaced_expression, variables);
+                    table.data[i][index] = oss.str();
+                } catch (const runtime_error& e) {
+                    cerr << "Error evaluating expression: " << e.what() << endl;
+                }
+            }
+        }
+    } else {
+        cerr << "ERROR! Expected digit or identifier after EQUAL." << "At column " << colnum << endl;
+    }
+}
+
 void update_data(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end) {
     vector<string> expression_list;
     vector<string> column_name_list;
@@ -207,14 +253,14 @@ void update_data(vector<TokenWithValue>::const_iterator& it, vector<TokenWithVal
         ++it;
         if (it != end && it->token == Token::SET) {
             ++it;
-            while (it != end && it->token != Token::WHERE) {
+            while (it != end && it->token != Token::WHERE && it->token != Token::SEMICOLON) {
                 if (it != end && it->token == Token::IDENTIFIER) {
                     column_name_list.push_back(it->value);  // 记录列名
                     ++it;
                     if (it != end && it->token == Token::EQUAL) {
                         ++it;
                         expression.clear();  // 每次处理新表达式时清空
-                        while (it != end && it->token != Token::COMMA && it->token != Token::WHERE) {
+                        while (it != end && it->token != Token::COMMA && it->token != Token::WHERE && it->token != Token::SEMICOLON) {
                             if (digit_or_identifier >= 1) {
                                 expression += " ";  // 添加空格分隔符
                             }
@@ -242,7 +288,7 @@ void update_data(vector<TokenWithValue>::const_iterator& it, vector<TokenWithVal
                     if (it != end && (it->token == Token::EQUAL || it->token == Token::GT || it->token == Token::LT)) {
                         string symbol = it->value;
                         ++it;
-                        if (it != end && (it->token == Token::IDENTIFIER || it->token == Token::NUMBER)) {
+                        if (it != end && (it->token == Token::STRING || it->token == Token::NUMBER)) {
                             string condition_value = it->value;
                             // 调用更新函数
                             for (int i = 0; i < size; ++i) {
@@ -260,8 +306,12 @@ void update_data(vector<TokenWithValue>::const_iterator& it, vector<TokenWithVal
                     cerr << "ERROR! Expected column name after WHERE." << "At column " << colnum << endl;
                     return;
                 }
+            } else if (it != end && it->token != Token::WHERE) {
+                for (int i = 0; i < size; ++i) {
+                    update_helper2(table, column_name_list[i], expression_list[i], digit_or_identifier_list[i]);
+                }
             } else {
-                cerr << "ERROR! Expected WHERE after expressions." << "At column " << colnum << endl;
+                cerr << "ERROR! Expected WHERE or ; after expressions." << "At column " << colnum << endl;
                 return;
             }
         } else {
@@ -273,3 +323,11 @@ void update_data(vector<TokenWithValue>::const_iterator& it, vector<TokenWithVal
         return;
     }
 }
+
+// 计算器（支持加减乘除和括号，含有一个变量）
+
+// 获取小数点后的位数
+
+// 更新数据辅助执行函数
+
+// 更新数据主函数
