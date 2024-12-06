@@ -3,6 +3,7 @@
 using namespace std;
 
 // 更新数据
+// 计算器（支持加减乘除和括号，含有一个变量）
 double evaluate(const string& expression, const map<string, double>& variables) {
     stack<double> values;
     stack<char> operators;
@@ -38,7 +39,17 @@ double evaluate(const string& expression, const map<string, double>& variables) 
         throw runtime_error("Undefined variable: " + token);
     };
 
-    stringstream ss(expression);
+    // 预处理表达式：加空格
+    string expr = expression;
+    for (size_t i = 0; i < expr.length(); ++i) {
+        if (ispunct(expr[i]) && !isspace(expr[i])) {
+            expr.insert(i, " ");
+            expr.insert(i + 2, " ");
+            i += 2; // 跳过刚插入的空格
+        }
+    }
+
+    stringstream ss(expr);
     string token;
 
     while (ss >> token) {
@@ -80,6 +91,7 @@ double evaluate(const string& expression, const map<string, double>& variables) 
     return values.top(); // 返回最终的结果
 }
 
+// 获取小数点后的位数
 int getDecimalPlaces(const string& s) {
     size_t pos = s.find('.');
     if (pos == string::npos) {
@@ -88,6 +100,7 @@ int getDecimalPlaces(const string& s) {
     return s.size() - pos - 1;
 }
 
+// 更新数据辅助执行函数(部分数据)
 void update_helper(Table& table, const string& column_name, const string& expression, const string& condition_column, const string& op, const string& value, int digit_or_identifier) {
     vector<bool> match(table.data.size(), false);
     // out <<digit_or_identifier;
@@ -157,10 +170,10 @@ void update_helper(Table& table, const string& column_name, const string& expres
         // 替换表达式中的列名为 'x'
         string replaced_expression = expression;
         size_t pos = 0;
-        while ((pos = replaced_expression.find(column_name, pos)) != string::npos) {
-            replaced_expression.replace(pos, column_name.length(), "x");
-            pos += column_name.length();  // 移动到下一个位置
-        }
+        // while ((pos = replaced_expression.find(column_name, pos)) != string::npos) {
+        //     replaced_expression.replace(pos, column_name.length(), "x");
+        //     pos += column_name.length();  // 移动到下一个位置
+        // }
 
         for (size_t i = 0; i < table.data.size(); ++i) {
             if (match[i]) {
@@ -173,7 +186,8 @@ void update_helper(Table& table, const string& column_name, const string& expres
 
                     // 构造变量表
                     map<string, double> variables;
-                    variables["x"] = stod(table.data[i][index]);
+                    string value_name = table.columns[condition_index].name;
+                    variables[value_name] = stod(table.data[i][index]);
 
                     // 计算结果并格式化
                     try {
@@ -191,6 +205,7 @@ void update_helper(Table& table, const string& column_name, const string& expres
     }
 }
 
+// 更新数据辅助执行函数(所有数据)
 void update_helper2(Table& table, const string& column_name, const string& expression, int digit_or_identifier){
     // cout << "in update_helper2" << endl;
     if (digit_or_identifier == 1) {
@@ -208,10 +223,10 @@ void update_helper2(Table& table, const string& column_name, const string& expre
         // 替换表达式中的列名为 'x'
         string replaced_expression = expression;
         size_t pos = 0;
-        while ((pos = replaced_expression.find(column_name, pos)) != string::npos) {
-            replaced_expression.replace(pos, column_name.length(), "x");
-            pos += column_name.length();  // 移动到下一个位置
-        }
+        // while ((pos = replaced_expression.find(column_name, pos)) != string::npos) {
+        //     replaced_expression.replace(pos, column_name.length(), "x");
+        //     pos += column_name.length();  // 移动到下一个位置
+        // }
 
         for (size_t i = 0; i < table.data.size(); ++i) {
             auto col_it = find_if(table.columns.begin(), table.columns.end(), [&](const Column& col) {
@@ -223,7 +238,8 @@ void update_helper2(Table& table, const string& column_name, const string& expre
 
                 // 构造变量表
                 map<string, double> variables;
-                variables["x"] = stod(table.data[i][index]);
+                string value_name = table.columns[index].name;
+                variables[value_name] = stod(table.data[i][index]);
 
                 // 计算结果并格式化
                 try {
@@ -240,6 +256,7 @@ void update_helper2(Table& table, const string& column_name, const string& expre
     }
 }
 
+// 更新数据主函数
 void update_data(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end) {
     vector<string> expression_list;
     vector<string> column_name_list;
@@ -323,11 +340,3 @@ void update_data(vector<TokenWithValue>::const_iterator& it, vector<TokenWithVal
         return;
     }
 }
-
-// 计算器（支持加减乘除和括号，含有一个变量）
-
-// 获取小数点后的位数
-
-// 更新数据辅助执行函数
-
-// 更新数据主函数

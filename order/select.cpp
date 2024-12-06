@@ -2,8 +2,16 @@
 #include "../project.h"
 using namespace std;
 
-// 选择数据
+void is_float(string s) {
+    if (s.find('.') != string::npos) {
+        out << fixed << setprecision(2) << stod(s);
+    } else {
+        out << s;
+    }
+}
 
+// 选择数据
+// 3.选择特定的数据where子函数
 void where_select(vector<string>& column_Name, vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end, Table& table, Table& table1) {
         ++it;
     if (it != end && it->token == Token::IDENTIFIER) {
@@ -105,6 +113,7 @@ void where_select(vector<string>& column_Name, vector<TokenWithValue>::const_ite
     }
 }
 
+// 3. innerjoin选择的执行函数
 void inner_helper(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end, Table& table1, Table& table2, const string& column1_name1, const string& column1_name2, const string& column2_name1, const string& column2_name2) {
     // 查找列索引
     int col1_index1 = -1, col1_index2 = -1, col2_index1 = -1, col2_index2 = -1;
@@ -229,7 +238,7 @@ void inner_helper(vector<TokenWithValue>::const_iterator& it, vector<TokenWithVa
         for (const auto& row : result) {
             for (size_t i = 0; i < row.size(); ++i) {
                  if (is_number_where(row[i])) {
-                    out << row[i];
+                    is_float(row[i]);
                 } else {
                     out << "'" << row[i] << "'";
                 }
@@ -240,6 +249,7 @@ void inner_helper(vector<TokenWithValue>::const_iterator& it, vector<TokenWithVa
     }
 }
 
+// 3. innerjoin选择part2
 void innerjoin(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end, string& table_name1, string& column1_name1, string& table_name2, string& column2_name1, Table& table1, Table& table2) {
     if (it != end && it->token == Token::IDENTIFIER && it->value == table_name1) {
         ++it;
@@ -292,6 +302,7 @@ void innerjoin(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue
         return;}
 }
 
+// 3. innerjoin选择part1
 void INNERJOIN(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end) {
     --it;
     if (it != end && it->token == Token::IDENTIFIER) {
@@ -377,6 +388,7 @@ void INNERJOIN(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue
         return;}
 }
 
+// 2. 选择特定的数据
 void identifier_select(const string& column_name, vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end) {
     if (it != end && it->token == Token::POINT) {
         INNERJOIN(it ,end);
@@ -435,7 +447,7 @@ void identifier_select(const string& column_name, vector<TokenWithValue>::const_
                             if (row1 == row2) {
                                 for (const auto& value : row1) {
                                     if (is_number_where(value)) {
-                                        out << value;
+                                        is_float(value);
                                     } else {
                                         out << "'" << value << "'";
                                     }
@@ -473,7 +485,7 @@ void identifier_select(const string& column_name, vector<TokenWithValue>::const_
                     for (const auto& row : table1.data) {
                         for (const auto& value : row) {
                             if (is_number_where(value)) {
-                                out << value;
+                                is_float(value);
                             } else {
                                 out << "'" << value << "'";
                             }
@@ -486,7 +498,7 @@ void identifier_select(const string& column_name, vector<TokenWithValue>::const_
                     for (const auto& row : table2.data) {
                         if (find(table1.data.begin(), table1.data.end(), row) == table1.data.end()) {
                             for (const auto& value : row) {
-                                out << value;
+                                is_float(value);
                                 if (&value != &row.back()) {
                                     out << ",";
                                 }
@@ -518,7 +530,7 @@ void identifier_select(const string& column_name, vector<TokenWithValue>::const_
                     for (const auto& row : table1.data) {
                         for (const auto& value : row) {
                             if (is_number_where(value)) {
-                                out << value;
+                                is_float(value);
                             } else {
                                 out << "'" << value << "'";
                             }
@@ -558,7 +570,7 @@ void identifier_select(const string& column_name, vector<TokenWithValue>::const_
                     if (it != table.columns.end()) {
                         size_t index = distance(table.columns.begin(), it);
                         if (is_number_where(row[index])) {
-                            out << row[index];
+                            is_float(row[index]);
                         } else {
                             out << "'" << row[index] << "'";
                         }
@@ -577,6 +589,7 @@ void identifier_select(const string& column_name, vector<TokenWithValue>::const_
     }
 }
 
+// 1. 选择数据主函数
 void select_data(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end) {
     if (it != end && it->token == Token::ASTERISK) {
         ++it;
@@ -590,15 +603,3 @@ void select_data(vector<TokenWithValue>::const_iterator& it, vector<TokenWithVal
         identifier_select(column_name, it, end);
     }
 }
-
-// 3.选择特定的数据where子函数
-
-// 3. innerjoin选择的执行函数
-
-// 3. innerjoin选择part2
-
-// 3. innerjoin选择part1
-
-// 2. 选择特定的数据
-
-// 1. 选择数据主函数

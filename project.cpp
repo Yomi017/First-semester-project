@@ -126,6 +126,7 @@ bool is_number_where(const std::string& s) {
     }
 }
 
+// 执行主函数
 int main() {
     // 读取 store.sql 文件，恢复数据库状态
     vector<vector<TokenWithValue>> lex_store = lexfile("store.sql");
@@ -141,9 +142,9 @@ int main() {
         execute_query(line_tokens);
     }  // 执行 SQL 命令
     string input, output;
-    cin >> input >> output;
-    // input = "input.sql";
-    // output = "output.csv";
+    // cin >> input >> output;
+    input = "input.sql";
+    output = "output.csv";
     vector<vector<TokenWithValue>> lex_output = lexfile(input);
     initialize_output_file(output);
 
@@ -158,7 +159,9 @@ int main() {
         ++colnum;
         execute_query(line_tokens);
     } // 执行 SQL 命令
-    out << "---" << endl;  // 输出结束标志
+    if (select_num != 0) {
+        out << "---" << endl;
+    }
     close_output_file();
 
     // 将数据库状态写入 store.txt
