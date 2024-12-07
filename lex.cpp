@@ -38,6 +38,20 @@ vector<TokenWithValue> lex(const string& input) {
             result.push_back(TokenWithValue(Token::STRING, token));
         }
         // 处理括号符号
+        else if (*ip == '-') {
+            ++ip; 
+            if (isdigit(*ip)) {
+                token.clear();
+                token.push_back('-');
+                while (isdigit(*ip) || *ip == '.') {  // 允许浮点数
+                    token.push_back(*ip);
+                    ++ip;
+                }
+                result.push_back(TokenWithValue(Token::NUMBER, token));
+            } else {
+                result.push_back(TokenWithValue(Token::MINUS, "-"));
+            }
+        }
         else if (*ip == '(') {
             // if (!inside_paren) {
                 // inside_paren = true;  // 标记进入括号

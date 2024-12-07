@@ -124,9 +124,9 @@ void where_delete(vector<string>& column_Name, vector<TokenWithValue>::const_ite
 void delete_data(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end);
 
 // 4. 更新
-void update_helper(Table& table, const string& column_name, const string& expression, const string& condition_column, const string& op, const string& value, int digit_or_identifier);
+void update_helper(Table& table, const string& column_name, const string& expression, const string& condition_column, const string& op, const string& value, int digit_or_identifier, vector<string>& variable_name);
 void update_data(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end);
-double evaluate(const string& expression, const map<string, double>& variables);
+double evaluate(const string& expression, const vector<map<string, double>>& variables);
 int getDecimalPlaces(const string& s);
 
 // 5. SQL 语句执行

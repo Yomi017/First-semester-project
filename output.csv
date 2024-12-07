@@ -1,12 +1,12 @@
 ID,Name,GPA,Major
-1,'Alice Johnson',5.00,'Computer Science'
+1,'Alice Johnson',-1.00,'Computer Science'
 2,'Bob Smith',5.00,'Electrical Engineering'
 3,'Catherine Lee',5.00,'Mathematics'
-5,'Eva White',5.00,'Chemistry'
+5,'Eva White',9.00,'Chemistry'
 ---
 ID,Name,GPA,Major
-1,'Alice Johnson',6.00,'Computer Science'
-2,'Bob Smith',6.00,'Electrical Engineering'
-3,'Catherine Lee',6.00,'Mathematics'
-5,'Eva White',6.00,'Chemistry'
+1,'Alice Johnson',1.00,'Computer Science'
+2,'Bob Smith',7.00,'Electrical Engineering'
+3,'Catherine Lee',7.00,'Mathematics'
+5,'Eva White',11.00,'Chemistry'
 ---

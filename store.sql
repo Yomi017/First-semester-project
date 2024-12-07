@@ -25,7 +25,7 @@ CREATE TABLE student (
   GPA FLOAT,
   Major TEXT
 );
-INSERT INTO student VALUES (1,'Alice Johnson',6.0,'Computer Science');
-INSERT INTO student VALUES (2,'Bob Smith',6.0,'Electrical Engineering');
-INSERT INTO student VALUES (3,'Catherine Lee',6.0,'Mathematics');
-INSERT INTO student VALUES (5,'Eva White',6.0,'Chemistry');
+INSERT INTO student VALUES (1,'Alice Johnson',1.0,'Computer Science');
+INSERT INTO student VALUES (2,'Bob Smith',7.0,'Electrical Engineering');
+INSERT INTO student VALUES (3,'Catherine Lee',7.0,'Mathematics');
+INSERT INTO student VALUES (5,'Eva White',11.0,'Chemistry');
