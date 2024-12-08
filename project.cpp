@@ -151,9 +151,9 @@ int main() {
         execute_query(line_tokens);
     }  // 执行 SQL 命令
     string input, output;
-    // cin >> input >> output;
-    input = "input.sql";
-    output = "output.csv";
+    cin >> input >> output;
+    // input = "input.sql";
+    // output = "output.csv";
     vector<vector<TokenWithValue>> lex_output = lexfile(input);
     initialize_output_file(output);
 
