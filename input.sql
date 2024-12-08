@@ -1,3 +1,8 @@
-SELECT * FROM student;
-UPDATE student SET GPA = GPA + ID+2 - ID;
-SELECT * FROM student;
+SELECT student.Name, achievement.Achievement, course.CourseName, student.GPA
+FROM student
+INNER JOIN enrollment
+ON student.ID = enrollment.StudentID
+INNER JOIN course
+ON enrollment.CourseID = course.CourseID
+INNER JOIN achievement
+ON student.GPA = achievement.GPA;

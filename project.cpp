@@ -10,6 +10,15 @@ vector<string> column_Name;// 用于存储select语句中的列名
 string symbol;// 用于存储where语句中的符号
 unordered_map<string, Database> databases;// 所有数据库集合
 
+// Select_inner_join语句的辅助变量
+vector<string> tablename_columnname_select_out;// 用于存储select语句要输出的表名和列名
+vector<vector<string>> tablename_columnname_innerjoin;
+unordered_map<string, vector<string>> tablename_columnname_where;// 用于存储where语句要比较的表名和列名
+vector<string> tablename;// 用于存储inner join语句中的表名
+Table table_inner;// 用于存储inner join语句中的表
+int inner_num = 0;// 用于存储inner join语句的次数
+Table T; // 用于存储所有结果
+
 // 清空表数据，以便重新插入数据
 void initialize_output_file(string filename) {
     out.open(filename, ios::out | ios::trunc); // 以截断模式打开，清空文件

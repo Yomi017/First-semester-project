@@ -33,11 +33,14 @@ INSERT INTO enrollment VALUES (4, 104);
 INSERT INTO enrollment VALUES (5, 105);
 SELECT * FROM student;
 SELECT * FROM course;
+
 SELECT student.Name, enrollment.CourseID
 FROM student
 INNER JOIN enrollment
 ON student.ID = enrollment.StudentID
 WHERE student.Name = 'Alice Johnson';
+
+
 UPDATE student SET GPA = 4.0 WHERE GPA < 4.0;
 DELETE FROM student WHERE Name = 'Dave Brown';
 SELECT * FROM student WHERE Name = 'Alice Johnson';

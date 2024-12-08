@@ -101,6 +101,13 @@ extern unordered_map<string, Database> databases;
 extern Database* current_database;
 extern vector<TokenWithValue> lex(const string& input);
 extern vector<vector<TokenWithValue>> lexfile(const string& filename);
+extern vector<string> tablename_columnname_select_out;// 用于存储select语句要输出的表名和列名
+extern vector<vector<string>> tablename_columnname_innerjoin;// 用于存储inner join语句要连接的表名和列名
+extern unordered_map<string, vector<string>> tablename_columnname_where;// 用于存储where语句要比较的表名和列名
+extern vector<string> tablename;
+extern Table table_inner;
+extern int inner_num;
+extern Table T; // 用于存储所有结果
 
 // 1. 创建数据库，以及创建表
 void create_database(const string& db_name);
@@ -111,10 +118,6 @@ void create_table(const string& table_name, vector<TokenWithValue>::const_iterat
 void select_data(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end);
 void identifier_select(const string& column_name, vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end);
 void asterisk_select(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end);
-void where_select(vector<string>& column_Name, vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end, Table& table, Table& table1);
-void innerjoin(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end, string& table_name1, string& column1_name1, string& table_name2, string& column2_name1, Table& table1, Table& table2);
-void inner_helper(Table& table1, Table& table2, const string& column1_name1, const string& column1_name2, const string& column2_name1, const string& column2_name2);
-void INNERJOIN(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end);
 bool is_number_where(const string& s);
 
 // 3. 删除数据

@@ -25,7 +25,14 @@ CREATE TABLE student (
   GPA FLOAT,
   Major TEXT
 );
-INSERT INTO student VALUES (1,'Alice Johnson',1.0,'Computer Science');
-INSERT INTO student VALUES (2,'Bob Smith',7.0,'Electrical Engineering');
-INSERT INTO student VALUES (3,'Catherine Lee',7.0,'Mathematics');
-INSERT INTO student VALUES (5,'Eva White',11.0,'Chemistry');
+INSERT INTO student VALUES (1,'Alice Johnson',5.0,'Computer Science');
+INSERT INTO student VALUES (2,'Bob Smith',11.0,'Electrical Engineering');
+INSERT INTO student VALUES (3,'Catherine Lee',11.0,'Mathematics');
+INSERT INTO student VALUES (6,'Eva White',15.0,'Chemistry');
+CREATE TABLE achievement (
+  GPA FLOAT,
+  Achievement TEXT
+);
+INSERT INTO achievement VALUES (5.0,'Dean List');
+INSERT INTO achievement VALUES (11.0,'Dean List');
+INSERT INTO achievement VALUES (15.0,'Dean List');

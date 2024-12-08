@@ -11,7 +11,350 @@ void is_float(string s) {
 }
 
 // 选择数据
-// 3.选择特定的数据where子函数
+void out_inner_join() {
+    if (select_num != 0) {
+        out << "---" << endl;
+    }
+    ++select_num;
+    for (const auto& col : tablename_columnname_select_out) {
+        out << col;
+        if (col != tablename_columnname_select_out.back()) {
+            out << ",";
+        }
+    }
+    out << endl;
+    for (const auto& row : T.data) {
+        for (const auto& col : tablename_columnname_select_out) {
+            auto it = find_if(T.columns.begin(), T.columns.end(), [&](const Column& column) {
+                return column.name == col;
+            });
+            if (it != T.columns.end()) {
+                size_t index = distance(T.columns.begin(), it);
+                if (is_number_where(row[index])) {
+                    is_float(row[index]);
+                } else {
+                    out << "'" << row[index] << "'";
+                }
+                if (col != tablename_columnname_select_out.back()) {
+                    out << ",";
+                }
+            }
+        }
+        out << endl;
+    }
+}
+
+void inner_helper_f() {
+    vector<Table> tables;
+    for (const auto& tname : tablename) {
+        Table t = current_database->tables[tname];
+        tables.push_back(t);
+    }
+    // 建立ON的映射，并将两个表能匹配的数据存入T中
+    // 先将第1个表的所有数据存入T中
+    vector<Column> col_row;
+    // 以table.columns的形式存储column
+    Table t = tables[0];
+    for (auto& col : t.columns) {
+        col.name = tablename[0] + "." + col.name;
+        col_row.push_back(col);
+    }
+    T.columns = col_row;
+    // 将第1个表的数据存入T中
+    for (const auto& row : t.data) {
+        T.data.push_back(row);
+    }
+    // 输出T
+    // cout << "T: " << endl;
+    // for (const auto& col : T.columns) {
+    //     cout << col.name << " ";
+    // }
+    // cout << endl;
+    // for (const auto& row : T.data) {
+    //     for (const auto& value : row) {
+    //         cout << value << " ";
+    //     }
+    //     cout << endl;
+    // }
+    // cout << tablename_columnname_innerjoin.size() << endl;
+    // 循环匹配剩下的表，将匹配的数据存入T中，删除前面不匹配的数据
+    for (int id = 0; id < tablename_columnname_innerjoin.size(); ++id){
+        t = tables[id + 1];
+        col_row.clear();
+        Table temp;
+        for (auto& col : t.columns) {
+            col.name = tablename[id + 1] + "." + col.name;
+            col_row.push_back(col);
+        }
+        temp.columns = col_row;
+        // 将第1个表的数据存入T中
+        for (const auto& row : t.data) {
+            temp.data.push_back(row);
+        }
+        vector<size_t> index(2);
+        index[0] = distance(T.columns.begin(), find_if(T.columns.begin(), T.columns.end(), [&](const Column& col) {
+            return col.name == tablename_columnname_innerjoin[id][0];
+        }));
+        index[1] = distance(temp.columns.begin(), find_if(temp.columns.begin(), temp.columns.end(), [&](const Column& col) {
+            return col.name == tablename_columnname_innerjoin[id][1];
+        }));
+        if (index[0] == T.columns.size() || index[1] == temp.columns.size()) {
+            cerr << "ERROR! Column does not exist in table " << "." << "At column " << colnum << endl;
+            return;
+        }
+        vector<vector<string>> data_temp;
+        for (const auto& target_row : T.data) {
+            for (const auto& row : temp.data) {
+                if (target_row[index[0]] == row[index[1]]) {
+                    vector<string> new_row;
+                    new_row.insert(new_row.end(), target_row.begin(), target_row.end());
+                    new_row.insert(new_row.end(), row.begin(), row.end());
+                    data_temp.push_back(new_row);
+                }
+            }
+        }
+        T.data = data_temp;
+
+        col_row.clear();
+        // 合并列名
+        for (auto& col : t.columns) {
+            col_row.push_back(col);
+        }
+
+        // 将新列名加入 T.columns
+        T.columns.insert(T.columns.end(), col_row.begin(), col_row.end());
+
+        // 输出T
+        // cout << "T: " << endl;
+        // for (const auto& col : T.columns) {
+        //     cout << col.name << " ";
+        // }
+        // cout << endl;
+        // for (const auto& row : T.data) {
+        //     for (const auto& value : row) {
+        //         cout << value << " ";
+        //     }
+        //     cout << endl;
+        // }
+    }
+}
+
+void inner(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end) {
+    if (it != end && it->token == Token::INNER) {
+        ++it;
+        if (it != end && it->token == Token::JOIN) {
+            ++it;
+            if (it != end && it->token == Token::IDENTIFIER) {
+                if (current_database == nullptr) {
+                    cerr << "ERROR! No database selected." << "At column " << colnum << endl;
+                    return;
+                }
+                if (current_database->tables.find(it->value) == current_database->tables.end()) {
+                    cerr << "ERROR! Table " << it->value << " does not exist." << "At column " << colnum << endl;
+                    return;
+                }
+                if (find(tablename.begin(), tablename.end(), it->value) == tablename.end()) {
+                    tablename.push_back(it->value);
+                }
+                ++it;
+                if (it != end && it->token == Token::ON) {
+                    ++it;
+                    if (it != end && it->token == Token::IDENTIFIER) {
+                        string tname = it->value;
+                        if (current_database == nullptr) {
+                            cerr << "ERROR! No database selected." << "At column " << colnum << endl;
+                            return;
+                        }
+                        if (current_database->tables.find(it->value) == current_database->tables.end()) {
+                            cerr << "ERROR! Table " << it->value << " does not exist." << "At column " << colnum << endl;
+                            return;
+                        }
+                        if (find(tablename.begin(), tablename.end(), it->value) == tablename.end()) {
+                            cerr << "ERROR! Table " << it->value << " does not exist." << "At column " << colnum << endl;
+                            return;
+                        }
+                        ++it;
+                        if (it != end && it->token == Token::POINT) {
+                            ++it;
+                            if (it != end && it->token == Token::IDENTIFIER) {
+                                // cout << it->value << endl;
+                                Table t0 = current_database->tables[tname];
+                                auto col_it = find_if(t0.columns.begin(), t0.columns.end(), [&](const Column& col) {
+                                    return col.name == it->value;
+                                });
+                                if (col_it == t0.columns.end()) {
+                                    cerr << "ERROR! Column " << it->value << " does not exist in table " << tname << "." << "At column " << colnum << endl;
+                                    return;
+                                }
+                                tablename_columnname_innerjoin.resize(inner_num + 1);
+                                tablename_columnname_innerjoin[inner_num].push_back(tname + "." + it->value);
+                                if (tablename_columnname_innerjoin.size() == 0) {
+                                    cout << "tablename_columnname_innerjoin is empty." << endl;
+                                    return;
+                                }
+                                // 输出tablename_columnname_innerjoin
+                                ++it;
+                                if (it != end && it->token == Token::EQUAL) {
+                                    ++it;
+                                    if (it != end && it->token == Token::IDENTIFIER) {
+                                        tname = it->value;
+                                        if (current_database == nullptr) {
+                                            cerr << "ERROR! No database selected." << "At column " << colnum << endl;
+                                            return;
+                                        }
+                                        if (current_database->tables.find(it->value) == current_database->tables.end()) {
+                                            cerr << "ERROR! Table " << it->value << " does not exist." << "At column " << colnum << endl;
+                                            return;
+                                        }
+                                        if (find(tablename.begin(), tablename.end(), it->value) == tablename.end()) {
+                                            tablename.push_back(it->value);
+                                        }
+                                        ++it;
+                                        if (it != end && it->token == Token::POINT) {
+                                            ++it;
+                                            if (it != end && it->token == Token::IDENTIFIER) {
+                                                t0 = current_database->tables[tname];
+                                                col_it = find_if(t0.columns.begin(), t0.columns.end(), [&](const Column& col) {
+                                                    return col.name == it->value;
+                                                });
+                                                if (col_it == t0.columns.end()) {
+                                                    cerr << "ERROR! Column " << it->value << " does not exist in table " << tname << "." << "At column " << colnum << endl;
+                                                    return;
+                                                }
+                                                tablename_columnname_innerjoin[inner_num].push_back(tname + "." + it->value);
+                                                // cout << "tablename_columnname_innerjoin: " << endl;
+                                                // for (const auto& m : tablename_columnname_innerjoin) {
+                                                //     for (const auto& p : m) {
+                                                //         cout << p << " ";
+                                                //     }
+                                                //     cout << endl;
+                                                // }
+                                                ++it;
+                                                ++inner_num;
+                                                inner(it, end);
+                                            } else {
+                                                cerr << "ERROR! Expected column name." << "At column " << colnum << endl;
+                                                return;
+                                            }
+                                        } else {
+                                            cerr << "ERROR! Expected '.'." << "At column " << colnum << endl;
+                                            return;
+                                        }
+                                    } else {
+                                        cerr << "ERROR! Expected column name." << "At column " << colnum << endl;
+                                        return;
+                                    }
+                                } else {
+                                    cerr << "ERROR! Expected =." << "At column " << colnum << endl;
+                                    return;
+                                }
+                            } else {
+                                cerr << "ERROR! Expected column name." << "At column " << colnum << endl;
+                                return;
+                            }
+                        } else {
+                            cerr << "ERROR! Expected '.'." << "At column " << colnum << endl;
+                            return;
+                        }
+                    }
+                } else {
+                    cerr << "ERROR! Expected ON after table name. " << "At column " << colnum << endl;
+                    return;
+                }
+            } else {
+                cerr << "ERROR! Expected table name after JOIN. " << "At column " << colnum << endl;
+                return;
+            }
+        } else {
+            cerr << "ERROR! Expected JOIN after INNER. " << "At column " << colnum << endl;
+            return;
+        }
+    } else if (it != end && (it->token == Token::WHERE || it->token == Token::SEMICOLON)) {
+        inner_helper_f();
+        if (it != end && it->token == Token::SEMICOLON) {
+            out_inner_join();
+        } else if (it != end && it->token == Token::WHERE) {
+            // where_inner(it, end);
+        } else {
+            cerr << "ERROR! Expected WHERE or ; after INNER JOIN. " << "At column " << colnum << endl;
+            return;
+        }
+    } else {
+        cerr << "ERROR! Expected INNER after FROM. " << "At column " << colnum << endl;
+        return;
+    }
+}
+
+void Inner_join(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end) {
+    table_inner.columns.clear();
+    T.columns.clear();
+    T.data.clear();
+    table_inner.data.clear();
+    tablename_columnname_innerjoin.clear();
+    tablename_columnname_select_out.clear();
+    tablename_columnname_where.clear();
+    tablename.clear();
+    inner_num = 0;
+    while (it != end && it->token != Token::FROM) {
+        if (it != end && it->token == Token::IDENTIFIER) {
+            if (current_database == nullptr) {
+                cerr << "ERROR! No database selected." << "At column " << colnum << endl;
+                return;
+            }
+            if (current_database->tables.find(it->value) == current_database->tables.end()) {
+                cerr << "ERROR! Table " << it->value << " does not exist." << "At column " << colnum << endl;
+                return;
+            }
+            string tablename = it->value;
+            ++it;
+            if (it != end && it->token == Token::POINT) {
+                ++it;
+                if (it != end && it->token == Token::IDENTIFIER) {
+                    tablename_columnname_select_out.push_back(tablename + "." + it->value);
+                    ++it;
+                    if (it != end && it->token == Token::COMMA) {
+                        ++it;
+                    } else {
+                        break;
+                    }
+                } else {
+                    cerr << "ERROR! Expected column name." << "At column " << colnum << endl;
+                    return;
+                }
+            } else {
+                cerr << "ERROR! Expected '.'." << "At column " << colnum << endl;
+                return;
+            }
+        } else {
+            cerr << "ERROR! Expected table name." << "At column " << colnum << endl;
+            return;
+        }
+    }
+    if (it != end && it->token == Token::FROM) {
+        ++it;
+        if (it != end && it->token == Token::IDENTIFIER) {
+            if (current_database == nullptr) {
+                cerr << "ERROR! No database selected." << "At column " << colnum << endl;
+                return;
+            }
+            if (current_database->tables.find(it->value) == current_database->tables.end()) {
+                cerr << "ERROR! Table " << it->value << " does not exist." << "At column " << colnum << endl;
+                return;
+            }
+            tablename.push_back(it->value);
+            ++it;
+            inner(it, end);
+        } else {
+            cerr << "ERROR! Expected table name." << "At column " << colnum << endl;
+            return;
+        }
+    } else {
+        cerr << "ERROR! Expected FROM." << "At column " << colnum << endl;
+        return;
+    }
+}
+
+// 2. 选择特定的数据
 void where_select(vector<string>& column_Name, vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end, Table& table, Table& table1) {
         ++it;
     if (it != end && it->token == Token::IDENTIFIER) {
@@ -113,285 +456,11 @@ void where_select(vector<string>& column_Name, vector<TokenWithValue>::const_ite
     }
 }
 
-// 3. innerjoin选择的执行函数
-void inner_helper(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end, Table& table1, Table& table2, const string& column1_name1, const string& column1_name2, const string& column2_name1, const string& column2_name2) {
-    // 查找列索引
-    int col1_index1 = -1, col1_index2 = -1, col2_index1 = -1, col2_index2 = -1;
-    // cout << table1.columns[0].name << endl;
-    for (size_t i = 0; i < table1.columns.size(); ++i) {
-        if (table1.columns[i].name == column1_name1) col1_index1 = i;
-        if (table1.columns[i].name == column1_name2) col1_index2 = i;
-    }
 
-    for (size_t i = 0; i < table2.columns.size(); ++i) {
-        if (table2.columns[i].name == column2_name1) col2_index1 = i;
-        if (table2.columns[i].name == column2_name2) col2_index2 = i;
-    }
-
-    // 检查列是否找到
-    if (col1_index1 == -1) {
-        cerr << "Column " << column1_name1 << " not found in table " << table1.name << "!" << endl;
-    }
-    if (col1_index2 == -1) {
-        cerr << "Column " << column1_name2 << " not found in table " << table1.name << "!" << endl;
-    }
-    if (col2_index1 == -1) {
-        cerr << "Column " << column2_name1 << " not found in table " << table2.name << "!" << endl;
-    }
-    if (col2_index2 == -1) {
-        cerr << "Column " << column2_name2 << " not found in table " << table2.name << "!" << endl;
-    }
-    ++it;
-    if (it != end && it->token == Token::WHERE) {
-        ++it;
-        if (it != end && it->token == Token::IDENTIFIER) {
-            string table_name = it->value;
-            if (current_database == nullptr) {
-                cerr << "ERROR! No database selected." << "At column " << colnum << endl;
-                return;
-            }
-            if (current_database->tables.find(table_name) == current_database->tables.end()) {
-                cerr << "ERROR! Table " << table_name << " does not exist." << "At column " << colnum << endl;
-                return;
-            }
-            Table& table_select = current_database->tables[table_name];
-            ++it;
-            if (it != end && it->token == Token::POINT) {
-                Table table_out;
-                column_Name.clear();
-                for (const auto& column : table_select.columns) {
-                    column_Name.push_back(column.name);
-                }
-                where_select(column_Name, it, end, table_select, table_out);
-                for (const auto& column : table_select.columns) {
-                    table_out.columns.push_back(column);
-                }
-                table_out.name = table_select.name;
-                // for (const auto& column : table_out.columns) {
-                //     out << column.name;
-                //     if (&column != &table_out.columns.back()) {
-                //         out << ",";
-                //     }
-                // }
-                // out << endl;
-                // for (const auto& row : table_out.data) {
-                //     for (const auto& value : row) {
-                //         out << value;
-                //         if (&value != &row.back()) {
-                //             out << ",";
-                //         }
-                //     }
-                //     out << endl;
-                // }
-                if (table_out.data.empty()) {
-                    cerr << "No result found." << endl;
-                    return;
-                }
-                if (table_name == table1.name) {
-                    inner_helper(it, end, table_out, table2, column1_name1, column1_name2, column2_name1, column2_name2);
-                } else if (table_name == table2.name) {
-                    inner_helper(it, end, table1, table_out, column1_name1, column1_name2, column2_name1, column2_name2);
-                } else {
-                    cerr << "ERROR! Table name does not match." << "At column " << colnum << endl;
-                    return;
-                }
-            } else {
-                cerr << "ERROR! Expected POINT after table name." << "At column " << colnum << endl;
-                return;
-            }
-        } else {
-            cerr << "ERROR! Expected column name after WHERE." << "At column " << colnum << endl;
-            return;
-        }
-    } else {
-        // 构建结果
-        vector<vector<string>> result;
-
-        // 建立表1的 column1_name2 -> column1_name1 映射
-        unordered_map<string, string> table1_map;
-        for (const auto& row : table1.data) {
-            table1_map[row[col1_index2]] = row[col1_index1];  // 使用 column1_name2 作为 key, column1_name1 作为 value
-        }
-
-        // 遍历表2数据，匹配并构造结果
-        for (const auto& row : table2.data) {
-            const string& key = row[col2_index2];  // 获取 column2_name2 的值作为 key
-            if (table1_map.find(key) != table1_map.end()) {
-                vector<string> new_row = {table1_map[key], row[col2_index1]};  // 匹配后输出 column1_name1 和 column2_name1 的值
-                result.push_back(new_row);
-            } else {
-                cerr << "No match found for " << key << endl;
-            }
-        }
-
-        if (result.empty()) {
-            cerr << "No result found." << endl;
-            return;
-        }
-
-        if (select_num !=0 ){
-            out << "---" << endl;
-        }
-        ++select_num;
-        // 输出结果
-        out << table1.name << "." << column1_name1 << "," << table2.name << "." << column2_name1 << endl;
-        for (const auto& row : result) {
-            for (size_t i = 0; i < row.size(); ++i) {
-                 if (is_number_where(row[i])) {
-                    is_float(row[i]);
-                } else {
-                    out << "'" << row[i] << "'";
-                }
-                if (i < row.size() - 1) out << ",";
-            }
-            out << endl;
-        }
-    }
-}
-
-// 3. innerjoin选择part2
-void innerjoin(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end, string& table_name1, string& column1_name1, string& table_name2, string& column2_name1, Table& table1, Table& table2) {
-    if (it != end && it->token == Token::IDENTIFIER && it->value == table_name1) {
-        ++it;
-        if (it != end && it->token == Token::POINT) {
-            ++it;
-            if (it != end && it->token == Token::IDENTIFIER) {
-                string column1_name2 = it->value;
-                ++it;
-                if (it != end && it->token == Token::EQUAL) {
-                    ++it;
-                    if (it != end && it->token == Token::IDENTIFIER && it->value == table_name2) {
-                        ++it;
-                        if (it != end && it->token == Token::POINT) {
-                            ++it;
-                            if (it != end && it->token == Token::IDENTIFIER) {
-                                string column2_name2 = it->value;
-                                inner_helper(it, end, table1, table2, column1_name1, column1_name2, column2_name1, column2_name2);
-                            } else {
-                                cerr << "ERROR! Expected column name after POINT. " << "At column " << colnum << endl;
-                                return;
-                            }
-                        } else {
-                            cerr << "ERROR! Expected POINT after table name. " << "At column " << colnum << endl;
-                            return;
-                        }
-                    } else if (it != end && it->token == Token::IDENTIFIER && it->value != table_name2) {
-                        cerr << "ERROR! The table name does not equal to the second table name. " << "At column " << colnum << endl;
-                        return;
-                    } else {
-                        cerr << "ERROR! Expected table name after EQUAL. " << "At column " << colnum << endl;
-                        return;
-                    }
-                } else {
-                    cerr << "ERROR! Expected EQUAL after column name." << "At column " << colnum << endl;
-                    return;
-                }
-            } else {
-                cerr << "ERROR! Expected column name after POINT." << "At column " << colnum << endl;
-                return;
-            }
-        } else {
-            cerr << "ERROR! Expected POINT after table name." << "At column " << colnum << endl;
-            return;
-        }
-    } else if (it != end && it->token == Token::IDENTIFIER && it->value != table_name1) {
-        cerr << "ERROR! The table name does not equal to the first table name." << "At column " << colnum << endl;
-        return;
-    } else {
-        cerr << "ERROR! Expected table name after ON." << "At column " << colnum << endl;
-        return;}
-}
-
-// 3. innerjoin选择part1
-void INNERJOIN(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end) {
-    --it;
-    if (it != end && it->token == Token::IDENTIFIER) {
-        string table_name1 = it->value;
-        Table& table1 = current_database->tables[table_name1];
-        ++it;
-        if (it != end && it->token == Token::POINT) {
-            ++it;
-            if (it != end && it->token == Token::IDENTIFIER) {
-                string column1_name1 = it->value;
-                ++it;
-                if (it != end && it->token == Token::COMMA) {
-                    ++it;
-                    if (it != end && it->token == Token::IDENTIFIER){
-                        string table_name2 = it->value;
-                        Table& table2 = current_database->tables[table_name2];
-                        ++it;
-                        if (it != end && it->token == Token::POINT) {
-                            ++it;
-                            if (it !=end && it->token == Token::IDENTIFIER) {
-                                string column2_name1 = it->value;
-                                ++it;
-                                if (it != end && it->token == Token::FROM){
-                                    ++it;
-                                    if (it != end && it->token == Token::IDENTIFIER) {
-                                        ++it;
-                                        if (it != end && it->token == Token::INNER) {
-                                            ++it;
-                                            if (it != end && it->token == Token::JOIN) {
-                                                ++it;
-                                                if (it != end && it->token == Token::IDENTIFIER) {
-                                                    ++it;
-                                                    if (it != end && it->token == Token::ON) {
-                                                        ++it;
-                                                        innerjoin(it, end, table_name1, column1_name1, table_name2, column2_name1, table1, table2);
-                                                    } else {
-                                                        cerr << "ERROR! Expected ON after JOIN. " << "At column " << colnum << endl;
-                                                        return;
-                                                    }
-                                                }
-                                            } else {
-                                                cerr << "ERROR! Expected JOIN after INNER. " << "At column " << colnum << endl;
-                                                return;
-                                            }
-                                        } else {
-                                            cerr << "ERROR! Expected INNER after FROM. " << "At column " << colnum << endl;
-                                            return;
-                                        }
-                                    } else {
-                                        cerr << "ERROR! Expected table name after FROM. " << "At column " << colnum << endl;
-                                        return;
-                                    }
-                                } else {
-                                    cerr << "ERROR! Expected FROM after column name. " << "At column " << colnum << endl;
-                                    return;
-                                }
-                            } else {
-                                cerr << "ERROR! Expected column name after POINT. " << "At column " << colnum << endl;
-                                return;
-                            }
-                        } else {
-                            cerr << "ERROR! Expected POINT after table name. " << "At column " << colnum << endl;
-                            return;
-                        }
-                    } else {
-                        cerr << "ERROR! Expected table name after COMMA. " << "At column " << colnum << endl;
-                        return;
-                    }
-                } else {
-                    cerr << "ERROR! Expected COMMA after column name. " << "At column " << colnum << endl;
-                    return;
-                }
-            } else {
-                cerr << "ERROR! Expected column name after POINT. " << "At column " << colnum << endl;
-                return;
-            }
-        } else {
-            cerr << "ERROR! Expected POINT after table name. " << "At column " << colnum << endl;
-            return;
-        }
-    } else {
-        cerr << "ERROR! Expected table name after POINT. " << "At column " << colnum << endl;
-        return;}
-}
-
-// 2. 选择特定的数据
 void identifier_select(const string& column_name, vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end) {
     if (it != end && it->token == Token::POINT) {
-        INNERJOIN(it ,end);
+        --it;
+        Inner_join(it, end);
     }
     if (it != end && it->token == Token::COMMA) {
         ++it;

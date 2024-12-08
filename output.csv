@@ -1,12 +1,6 @@
-ID,Name,GPA,Major
-1,'Alice Johnson',-1.00,'Computer Science'
-2,'Bob Smith',5.00,'Electrical Engineering'
-3,'Catherine Lee',5.00,'Mathematics'
-5,'Eva White',9.00,'Chemistry'
----
-ID,Name,GPA,Major
-1,'Alice Johnson',1.00,'Computer Science'
-2,'Bob Smith',7.00,'Electrical Engineering'
-3,'Catherine Lee',7.00,'Mathematics'
-5,'Eva White',11.00,'Chemistry'
+student.Name,achievement.Achievement,course.CourseName,student.GPA
+'Alice Johnson','Dean List','Introduction to Computer Science',5.00
+'Alice Johnson','Dean List','Linear Algebra',5.00
+'Bob Smith','Dean List','Circuit Analysis',11.00
+'Catherine Lee','Dean List','Linear Algebra',11.00
 ---
