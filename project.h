@@ -119,6 +119,7 @@ void select_data(vector<TokenWithValue>::const_iterator& it, vector<TokenWithVal
 void identifier_select(const string& column_name, vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end);
 void asterisk_select(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end);
 bool is_number_where(const string& s);
+void where_select(vector<string>& column_Name, vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end, Table& table, Table& table1);
 
 // 3. 删除数据
 void asterisk_delete(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end);

@@ -11,6 +11,44 @@ void is_float(string s) {
 }
 
 // 选择数据
+Table where_inner(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end, Table& table) {
+    Table output_table;
+    where_select(tablename_columnname_select_out, it, end, table, output_table);
+    ++it;
+    if (it != end && it->token == Token::AND) {
+        Table output_table1;
+        where_select(tablename_columnname_select_out, it, end, table, output_table1);
+        // 将output_table和output_table1的交集存入output_and
+        vector<vector<string>> output_and;
+        for (const auto& row1 : output_table.data) {
+            for (const auto& row2 : output_table1.data) {
+                if (row1 == row2) {
+                    output_and.push_back(row1);
+                }
+            }
+        }
+        output_table.data = output_and;
+        return output_table;
+    } else if (it != end && it->token == Token::OR) {
+        Table output_table1;
+        where_select(tablename_columnname_select_out, it, end, table, output_table1);
+        // 将output_table和output_table1的并集存入output_or
+        vector<vector<string>> output_or;
+        for (const auto& row : output_table.data) {
+            output_or.push_back(row);
+        }
+        for (const auto& row : output_table1.data) {
+            if (find(output_or.begin(), output_or.end(), row) == output_or.end()) {
+                output_or.push_back(row);
+            }
+        }
+        output_table.data = output_or;
+        return output_table;
+    } else {
+        return output_table;
+    }
+}
+
 void out_inner_join() {
     if (select_num != 0) {
         out << "---" << endl;
@@ -274,7 +312,33 @@ void inner(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::c
         if (it != end && it->token == Token::SEMICOLON) {
             out_inner_join();
         } else if (it != end && it->token == Token::WHERE) {
-            // where_inner(it, end);
+            Table output = where_inner(it, end, T);
+            // 输出结果
+            if (select_num != 0) {
+                out << "---" << endl;
+            }
+            ++select_num;
+            for (const auto& col : tablename_columnname_select_out) {
+                out << col;
+                if (col != tablename_columnname_select_out.back()) {
+                    out << ",";
+                }
+            }
+            out << endl;
+            // 输出output所有数据
+            for (const auto& row : output.data) {
+                for (const auto& value : row) {
+                    if (is_number_where(value)) {
+                        is_float(value);
+                    } else {
+                        out << "'" << value << "'";
+                    }
+                    if (&value != &row.back()) {
+                        out << ",";
+                    }
+                }
+                out << endl;
+            }
         } else {
             cerr << "ERROR! Expected WHERE or ; after INNER JOIN. " << "At column " << colnum << endl;
             return;
@@ -326,7 +390,7 @@ void Inner_join(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValu
                 return;
             }
         } else {
-            cerr << "ERROR! Expected table name." << "At column " << colnum << endl;
+            cerr << "ERROR! Expected tablename." << "At column " << colnum << endl;
             return;
         }
     }
@@ -345,7 +409,7 @@ void Inner_join(vector<TokenWithValue>::const_iterator& it, vector<TokenWithValu
             ++it;
             inner(it, end);
         } else {
-            cerr << "ERROR! Expected table name." << "At column " << colnum << endl;
+            cerr << "ERROR! Expected table name!" << "At column " << colnum << endl;
             return;
         }
     } else {
@@ -360,6 +424,29 @@ void where_select(vector<string>& column_Name, vector<TokenWithValue>::const_ite
     if (it != end && it->token == Token::IDENTIFIER) {
         string column_name = it->value;
         ++it;
+        if (it != end && it->token == Token::POINT) {
+            ++it;
+            if (it != end && it->token == Token::IDENTIFIER) {
+                string col_name = it->value;
+                column_name = column_name + "." + col_name;
+
+                // cout << column_name << endl;
+                // for (const auto& col : table.columns) {
+                //     cout << col.name << " ";
+                // }
+
+                if (find_if(table.columns.begin(), table.columns.end(), [&](const Column& col) {
+                    return col.name == column_name;
+                }) == table.columns.end()) {
+                    cerr << "ERROR! Column " << col_name << " does not exist in table " << table.name << "." << "At column " << colnum << endl;
+                    return;
+                }
+                ++it;
+            } else {
+                cerr << "ERROR! Expected table name after '.'." << "At column " << colnum << endl;
+                return;
+            }
+        }
         // 检查操作符
         if (it != end && (it->token == Token::EQUAL || it->token == Token::GT || it->token == Token::LT || it->token == Token::NOT)) {
             string tp = it->value;
@@ -376,12 +463,7 @@ void where_select(vector<string>& column_Name, vector<TokenWithValue>::const_ite
             ++it;
             if (it != end && (it->token == Token::STRING || it->token == Token::NUMBER)) {
                 string value = it->value;
-                // 万恶之源
-                // try {
-                //     std::stod(value);  // 尝试将字符串转换为数字
-                // } catch (const std::invalid_argument&) {
-                // } catch (const std::out_of_range&) {
-                // }
+                
                 vector<bool> match(table.data.size());
                 auto its = find_if(table.columns.begin(), table.columns.end(), [&](const Column& col) {
                         return col.name == column_name;
@@ -456,11 +538,10 @@ void where_select(vector<string>& column_Name, vector<TokenWithValue>::const_ite
     }
 }
 
-
 void identifier_select(const string& column_name, vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end) {
     if (it != end && it->token == Token::POINT) {
         --it;
-        Inner_join(it, end);
+        Inner_join(it ,end);
     }
     if (it != end && it->token == Token::COMMA) {
         ++it;
@@ -596,6 +677,7 @@ void identifier_select(const string& column_name, vector<TokenWithValue>::const_
                         }
                     }
                     out << endl;
+                    // 输出所有数据
                     for (const auto& row : table1.data) {
                         for (const auto& value : row) {
                             if (is_number_where(value)) {
