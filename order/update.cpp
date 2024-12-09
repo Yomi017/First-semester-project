@@ -109,7 +109,7 @@ int getDecimalPlaces(const string& s) {
 }
 
 // 更新数据辅助执行函数(部分数据)
-void update_helper(Table& table, const string& column_name, const string& expression, const string& condition_column, const string& op, const string& value, int digit_or_identifier, vector<string>& variable_name) {
+void update_helper(Table& table, const string& column_name, const string& expression, const string& condition_column, const string& op, const string& value, int digit_or_identifier, vector<string>& variable_name, vector<TokenWithValue>::const_iterator& it, vector<TokenWithValue>::const_iterator end) {
     vector<bool> match(table.data.size(), false);
     // out <<digit_or_identifier;
     if (digit_or_identifier == 1) {
@@ -135,6 +135,120 @@ void update_helper(Table& table, const string& column_name, const string& expres
                 if (stod(target_value) - stod(value) < 1e-9) {
                     match[i] = true;
                 }
+            }
+        }
+        ++it;
+        if (it != end && it->token == Token::AND) {
+            ++it;
+            if (it != end && it->token == Token::IDENTIFIER) {
+                string condition_column2 = it->value;
+                ++it;
+                if (it != end && (it->token == Token::EQUAL || it->token == Token::GT || it->token == Token::LT || it->token == Token::NOT)) {
+                    string symbol2 = it->value;
+                    if (it != end && it->token == Token::NOT) {
+                        ++it;
+                        if (it != end && it->token != Token::EQUAL) {
+                            cerr << "ERROR! Expected = after NOT." << "At column " << colnum << endl;
+                            return;
+                        }
+                    }
+                    ++it;
+                    if (it != end && (it->token == Token::STRING || it->token == Token::NUMBER)) {
+                        string condition_value2 = it->value;
+                        auto its2 = find_if(table.columns.begin(), table.columns.end(), [&](const Column& col) {
+                            return col.name == condition_column2;
+                        });
+                        if (its2 == table.columns.end()) {
+                            throw runtime_error("Condition column not found.");
+                        }
+                        size_t condition_index2 = distance(table.columns.begin(), its2);
+
+                        for (size_t i = 0; i < table.data.size(); ++i) {
+                            const auto& target_row = table.data[i];
+                            const auto& target_value = target_row[condition_index2];
+
+                            if (match[i]) {
+                                if (symbol2 == "=" && target_value == condition_value2) {
+                                    match[i] = true;
+                                } else if (symbol2 == ">" && is_number_where(condition_value2) && is_number_where(target_value)) {
+                                    if (stod(target_value) - stod(condition_value2) > 1e-9) {
+                                        match[i] = true;
+                                    }
+                                } else if (symbol2 == "<" && is_number_where(condition_value2) && is_number_where(target_value)) {
+                                    if (stod(target_value) - stod(condition_value2) < 1e-9) {
+                                        match[i] = true;
+                                    }
+                                } else {
+                                    match[i] = false;
+                                }
+                            }
+                        }
+                    } else {
+                        cerr << "ERROR! Expected value after symbol." << "At column " << colnum << endl;
+                        return;
+                    }
+                } else {
+                    cerr << "ERROR! Expected symbol after column name." << "At column " << colnum << endl;
+                    return;
+                }
+            } else {
+                cerr << "ERROR! Expected column name after AND." << "At column " << colnum << endl;
+                return;
+            }
+        } else if (it != end && it->token == Token::OR) {
+            ++it;
+            if (it != end && it->token == Token::IDENTIFIER) {
+                string condition_column2 = it->value;
+                ++it;
+                if (it != end && (it->token == Token::EQUAL || it->token == Token::GT || it->token == Token::LT || it->token == Token::NOT)) {
+                    string symbol2 = it->value;
+                    if (it != end && it->token == Token::NOT) {
+                        ++it;
+                        if (it != end && it->token != Token::EQUAL) {
+                            cerr << "ERROR! Expected = after NOT." << "At column " << colnum << endl;
+                            return;
+                        }
+                    }
+                    ++it;
+                    if (it != end && (it->token == Token::STRING || it->token == Token::NUMBER)) {
+                        string condition_value2 = it->value;
+                        auto its2 = find_if(table.columns.begin(), table.columns.end(), [&](const Column& col) {
+                            return col.name == condition_column2;
+                        });
+                        if (its2 == table.columns.end()) {
+                            throw runtime_error("Condition column not found.");
+                        }
+                        size_t condition_index2 = distance(table.columns.begin(), its2);
+
+                        for (size_t i = 0; i < table.data.size(); ++i) {
+                            const auto& target_row = table.data[i];
+                            const auto& target_value = target_row[condition_index2];
+
+                            if (!match[i]) {
+                                if (symbol2 == "=" && target_value == condition_value2) {
+                                    match[i] = true;
+                                } else if (symbol2 == ">" && is_number_where(condition_value2) && is_number_where(target_value)) {
+                                    if (stod(target_value) - stod(condition_value2) > 1e-9) {
+                                        match[i] = true;
+                                    }
+                                } else if (symbol2 == "<" && is_number_where(condition_value2) && is_number_where(target_value)) {
+                                    if (stod(target_value) - stod(condition_value2) < 1e-9) {
+                                        match[i] = true;
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        cerr << "ERROR! Expected value after symbol." << "At column " << colnum << endl;
+                        return;
+                    }
+                } else {
+                    cerr << "ERROR! Expected symbol after column name." << "At column " << colnum << endl;
+                    return;
+                }
+            } else {
+                cerr << "ERROR! Expected column name after OR." << "At column " << colnum << endl;
+                return;
             }
         }
         for (size_t i = 0; i < table.data.size(); ++i) {
@@ -174,7 +288,120 @@ void update_helper(Table& table, const string& column_name, const string& expres
                 }
             }
         }
+        ++it;
+        if (it != end && it->token == Token::AND) {
+            ++it;
+            if (it != end && it->token == Token::IDENTIFIER) {
+                string condition_column2 = it->value;
+                ++it;
+                if (it != end && (it->token == Token::EQUAL || it->token == Token::GT || it->token == Token::LT || it->token == Token::NOT)) {
+                    string symbol2 = it->value;
+                    if (it != end && it->token == Token::NOT) {
+                        ++it;
+                        if (it != end && it->token != Token::EQUAL) {
+                            cerr << "ERROR! Expected = after NOT." << "At column " << colnum << endl;
+                            return;
+                        }
+                    }
+                    ++it;
+                    if (it != end && (it->token == Token::STRING || it->token == Token::NUMBER)) {
+                        string condition_value2 = it->value;
+                        auto its2 = find_if(table.columns.begin(), table.columns.end(), [&](const Column& col) {
+                            return col.name == condition_column2;
+                        });
+                        if (its2 == table.columns.end()) {
+                            throw runtime_error("Condition column not found.");
+                        }
+                        size_t condition_index2 = distance(table.columns.begin(), its2);
 
+                        for (size_t i = 0; i < table.data.size(); ++i) {
+                            const auto& target_row = table.data[i];
+                            const auto& target_value = target_row[condition_index2];
+
+                            if (match[i]) {
+                                if (symbol2 == "=" && target_value == condition_value2) {
+                                    match[i] = true;
+                                } else if (symbol2 == ">" && is_number_where(condition_value2) && is_number_where(target_value)) {
+                                    if (stod(target_value) - stod(condition_value2) > 1e-9) {
+                                        match[i] = true;
+                                    }
+                                } else if (symbol2 == "<" && is_number_where(condition_value2) && is_number_where(target_value)) {
+                                    if (stod(target_value) - stod(condition_value2) < 1e-9) {
+                                        match[i] = true;
+                                    }
+                                } else {
+                                    match[i] = false;
+                                }
+                            }
+                        }
+                    } else {
+                        cerr << "ERROR! Expected value after symbol." << "At column " << colnum << endl;
+                        return;
+                    }
+                } else {
+                    cerr << "ERROR! Expected symbol after column name." << "At column " << colnum << endl;
+                    return;
+                }
+            } else {
+                cerr << "ERROR! Expected column name after AND." << "At column " << colnum << endl;
+                return;
+            }
+        } else if (it != end && it->token == Token::OR) {
+            ++it;
+            if (it != end && it->token == Token::IDENTIFIER) {
+                string condition_column2 = it->value;
+                ++it;
+                if (it != end && (it->token == Token::EQUAL || it->token == Token::GT || it->token == Token::LT || it->token == Token::NOT)) {
+                    string symbol2 = it->value;
+                    if (it != end && it->token == Token::NOT) {
+                        ++it;
+                        if (it != end && it->token != Token::EQUAL) {
+                            cerr << "ERROR! Expected = after NOT." << "At column " << colnum << endl;
+                            return;
+                        }
+                    }
+                    ++it;
+                    if (it != end && (it->token == Token::STRING || it->token == Token::NUMBER)) {
+                        string condition_value2 = it->value;
+                        auto its2 = find_if(table.columns.begin(), table.columns.end(), [&](const Column& col) {
+                            return col.name == condition_column2;
+                        });
+                        if (its2 == table.columns.end()) {
+                            throw runtime_error("Condition column not found.");
+                        }
+                        size_t condition_index2 = distance(table.columns.begin(), its2);
+
+                        for (size_t i = 0; i < table.data.size(); ++i) {
+                            const auto& target_row = table.data[i];
+                            const auto& target_value = target_row[condition_index2];
+
+                            if (!match[i]) {
+                                if (symbol2 == "=" && target_value == condition_value2) {
+                                    match[i] = true;
+                                } else if (symbol2 == ">" && is_number_where(condition_value2) && is_number_where(target_value)) {
+                                    if (stod(target_value) - stod(condition_value2) > 1e-9) {
+                                        match[i] = true;
+                                    }
+                                } else if (symbol2 == "<" && is_number_where(condition_value2) && is_number_where(target_value)) {
+                                    if (stod(target_value) - stod(condition_value2) < 1e-9) {
+                                        match[i] = true;
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        cerr << "ERROR! Expected value after symbol." << "At column " << colnum << endl;
+                        return;
+                    }
+                } else {
+                    cerr << "ERROR! Expected symbol after column name." << "At column " << colnum << endl;
+                    return;
+                }
+            } else {
+                cerr << "ERROR! Expected column name after OR." << "At column " << colnum << endl;
+                return;
+            }
+        }
         // 替换表达式中的列名为 'x'
         string replaced_expression = expression;
         size_t pos = 0;
@@ -378,7 +605,7 @@ void update_data(vector<TokenWithValue>::const_iterator& it, vector<TokenWithVal
                             string condition_value = it->value;
                             // 调用更新函数
                             for (int i = 0; i < size; ++i) {
-                                update_helper(table, column_name_list[i], expression_list[i], condition_column, symbol, condition_value, digit_or_identifier_list[i], variable_name);
+                                update_helper(table, column_name_list[i], expression_list[i], condition_column, symbol, condition_value, digit_or_identifier_list[i], variable_name, it, end);
                             }
                         } else {
                             cerr << "ERROR! Expected value after symbol." << "At column " << colnum << endl;

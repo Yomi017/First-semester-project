@@ -1,3 +1,4 @@
+USE DATABASE test_university;
 SELECT student.Name, achievement.Achievement, course.CourseName, student.GPA
 FROM student
 INNER JOIN enrollment
